@@ -383,3 +383,153 @@ export function debounceTime(timeInMilisecond) {
     }
   })
 }
+
+function switchMap(project: (val) => Observable) {
+  return (observable) => new Observable(subscriber => {
+    let innerSub;
+    const sub = observable.subscribe(
+      {
+        next: (val) => {
+          if (innerSub) {
+            innerSub.unsubscribe();
+            innerSub._lift();
+          }
+
+          innerSub = project(val).subscribe(
+            {
+              next: (value) => {
+                subscriber.next(value); 
+              }
+            }
+          )
+        },
+        error: (err) => {
+          subscriber.error(err)
+        },
+        complete: () => {
+          subscriber.complete();
+        }
+      }
+    );
+
+    return () => {
+        if (innerSub) {
+            innerSub.unsubscribe();
+            innerSub._lift();
+       }
+    }
+  });
+}
+
+export function distinctUntilChanged(compare?: (prev, next) => boolean) {
+    return (observable) => new Observable(subscriber => {
+      let prevVal;
+      let nextVal;
+      const sub = observable.subscribe(
+      {
+        next: (val) => {
+          nextVal = val;
+          if (compare && compare(prevVal, nextVal)) subscriber.next(val);
+          if (prevVal !== nextVal) subscriber.next(val);
+          prevVal = val;
+        },
+        error: (err) => {
+          subscriber.error(err)
+        },
+        complete: () => {
+          subscriber.complete();
+        }
+      }
+    );
+
+    return () => {
+      sub.unsubscribe();
+    }
+  })
+}
+
+export function throttleTime(rate: number) {
+      return (observable) => new Observable(subscriber => {
+      let lastEmmision = Date.now() - rate;
+      const sub = observable.subscribe(
+      {
+        next: (val) => {
+          if (Date.now() - lastEmmision >= rate) {
+            subscriber.next(val);
+            lastEmmision = Date.now();
+          }
+        },
+        error: (err) => {
+          subscriber.error(err)
+        },
+        complete: () => {
+          subscriber.complete();
+        }
+      }
+    );
+
+    return () => {
+      sub.unsubscribe();
+    }
+  })
+}
+
+export function sampleTime(rate: number) {
+      return (observable) => new Observable(subscriber => {
+      let lastValue;
+      const intervalId = setInterval(() => {
+        if (lastValue !== undefined) subscriber.next(lastValue);
+      }, rate)
+      const sub = observable.subscribe(
+      {
+        next: (val) => {
+          lastValue = val;
+        },
+        error: (err) => {
+          subscriber.error(err)
+        },
+        complete: () => {
+          subscriber.complete();
+        }
+      }
+    );
+
+    return () => {
+      sub.unsubscribe();
+      clearInterval(intervalId);
+    }
+  })
+}
+
+export function auditTime(rate: number) {
+      return (observable) => new Observable(subscriber => {
+      let lastValue;
+      let active = false;
+      let timeoutId;
+      const sub = observable.subscribe(
+      {
+        next: (val) => {
+          lastValue = val;
+          if (!active) {
+            timeoutId = setTimeout(() => {
+              subscriber.next(lastValue);
+              active = false;
+            }, rate)
+          }
+          active = true;
+        },
+        error: (err) => {
+          subscriber.error(err)
+        },
+        complete: () => {
+          subscriber.complete();
+        }
+      }
+    );
+
+    return () => {
+      sub.unsubscribe();
+      clearTimeout(timeoutId);
+    }
+  })
+}

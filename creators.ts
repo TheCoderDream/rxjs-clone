@@ -172,6 +172,11 @@ export function fromEvent(element, eventTpye: string) {
   });
 }
 
+
+const GeneratorFunction = function*(){}.constructor;
+const AsyncFunction = async function(){}.constructor;
+const AsyncGeneratorFunction = async function*(){}.constructor;
+
 function fromArray(arr: Array<any>) {
   return new Observable(subscriber => {
     arr.forEach(val => {
@@ -194,7 +199,41 @@ function fromPromise(promise: Promise<any>) {
   });
 }
 
-type ObservableInput = Array<any> | Promise<any> | string | number;
-export function from(observableInput: ObservableInput) {
+// it is not possible to cancel promise 
+// passing signal parameter into fetch api solves that
+export function fetchAsObservable(input: RequestInfo, init?: RequestInit){
+  return new Observable((subscriber) =>{
+    const controller = new AbortController();
+    const signal = controller.signal;
 
+    fetch(input, {...init, signal})
+      .then(res => subscriber.next(res))
+      .catch(err => subscriber.error(err))
+      .finally(() => subscriber.complete());
+
+    return () => {
+      controller.abort();
+    }
+  })
+}
+
+function fromGenerator(gen: GeneratorFunction) {
+  return new Observable(subscriber => {
+    for (let value of gen()) {
+      console.log(value)
+      subscriber.next(value);
+    }
+    subscriber.complete();
+  });
+}
+
+
+export function from(value: any) {
+  if (!!value && typeof value.subscribe !== 'function' && typeof value.then === 'function') {
+    return fromPromise(value);
+  } else if (Array.isArray(value)) {
+    return fromArray(value);
+  } else if (typeof value === 'string') {
+    return fromArray(value.split(''));
+  }
 }
