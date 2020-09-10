@@ -171,3 +171,30 @@ export function fromEvent(element, eventTpye: string) {
     };
   });
 }
+
+function fromArray(arr: Array<any>) {
+  return new Observable(subscriber => {
+    arr.forEach(val => {
+      subscriber.next(val);
+    });
+    subscriber.complete();
+  });
+}
+
+function fromPromise(promise: Promise<any>) {
+  return new Observable(async subscriber => {
+    try {
+      const response = await promise;
+      subscriber.next(response);
+    } catch(error) {
+      subscriber.next(error);
+    } finally {
+      
+    }
+  });
+}
+
+type ObservableInput = Array<any> | Promise<any> | string | number;
+export function from(observableInput: ObservableInput) {
+
+}

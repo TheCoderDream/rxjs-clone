@@ -1,3 +1,11 @@
-h1, h2 {
-  font-family: Lato;
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.example {
+  margin: auto;
+  width: 90%;
+  background-color: rgb(66, 163, 219);
+  white-space: pre;
 }

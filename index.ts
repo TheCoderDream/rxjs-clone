@@ -1,5 +1,7 @@
 import {Observable, of, fromEvent,  } from './creators';
+import './style.css';
 import {map, filter, mapTo, reduce, scan, take, takeUntil, takeWhile, find, startWith, endWith, debounceTime } from './operators';
+console.clear();
 
 //       EXAMPLES
 
@@ -75,7 +77,7 @@ const example = source.pipe(scan((acc, curr) => acc + curr, 0));
 // interval(1000).pipe(take(5), startWith(-1),endWith(6), toArray()).subscribe(console.log);
 
 
-fromEvent(document.getElementById('emre'), 'keyup')
+fromEvent(document, 'keyup')
 .pipe(
   debounceTime(2000),
   map(e => e.target.value)
