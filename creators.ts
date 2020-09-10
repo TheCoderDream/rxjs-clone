@@ -189,7 +189,7 @@ function fromPromise(promise: Promise<any>) {
     } catch(error) {
       subscriber.next(error);
     } finally {
-      
+      subscriber.complete();
     }
   });
 }
