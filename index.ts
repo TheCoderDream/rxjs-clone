@@ -1,6 +1,6 @@
-import {Observable, of, fromEvent, from, interval, fetchAsObservable } from './creators';
+import {Observable, of, fromEvent, from, interval, fetchAsObservable, merge, empty } from './creators';
 import './style.css';
-import {map, filter, mapTo, reduce, scan, take, takeUntil, takeWhile, find, startWith, endWith, debounceTime, distinctUntilChanged, throttleTime, sampleTime, auditTime, switchMap } from './operators';
+import {map, filter, mapTo, reduce, scan, take, takeUntil, takeWhile, find, startWith, endWith, debounceTime, distinctUntilChanged, throttleTime, sampleTime, auditTime, switchMap, pluck } from './operators';
 console.clear();
 
 //       EXAMPLES
@@ -105,9 +105,58 @@ fromEvent(document, 'scroll')
     map(({target}) => calculateScrollPercent(target.documentElement))
   ).subscribe(val => {progressBar.style.width = val + '%' })
 
-fromEvent(document, 'click')
+// fromEvent(document, 'click')
+//   .pipe(
+//     // restart counter on every click
+//     switchMap(() => interval(1000).pipe(take(10)))
+//   )
+//   .subscribe(console.log);
+
+const timer1 = interval(1000).pipe(mapTo('first'), take(2));
+const timer2 = interval(2000).pipe(mapTo('second'), take(1));
+const timer3 = interval(500).pipe(mapTo('third'), take(3));
+const merged = merge(timer1, timer2, timer3);
+merged.subscribe(x => console.log(x));
+
+const COUNTDOWN_SECONDS = 10;
+
+// elem refs
+const remainingLabel = document.getElementById('remaining');
+const pauseButton = document.getElementById('pause');
+const resumeButton = document.getElementById('resume');
+
+// streams
+const interval$ = interval(1000).pipe(mapTo(-1));
+const pause$ = fromEvent(pauseButton, 'click').pipe(mapTo(false));
+const resume$ = fromEvent(resumeButton, 'click').pipe(mapTo(true));
+
+const timer$ = merge(pause$, resume$)
   .pipe(
-    // restart counter on every click
-    switchMap(() => interval(1000).pipe(take(10)))
+    startWith(true),
+    switchMap(val => (val ? interval$ : empty())),
+    scan((acc, curr) => (curr ? curr + acc : acc), COUNTDOWN_SECONDS),
+    takeWhile(v => v > 0)
   )
-  .subscribe(console.log);
+  .subscribe((val: any) => remainingLabel.innerHTML = val);
+
+
+const inputBox = document.getElementById('text-input');
+const typeaheadContainer = document.getElementById('typeahead-container');
+
+const BASE_URL = 'https://api.openbrewerydb.org/breweries';
+// streams
+const input$ = fromEvent(inputBox, 'keyup');
+
+input$
+  .pipe(
+    debounceTime(200),
+    map(e => e.target.value),
+    distinctUntilChanged(),
+    switchMap(searchTerm => fetchAsObservable(
+      `${BASE_URL}?by_name=${searchTerm}`
+      )
+    )
+  )
+  .subscribe((response: any[]) => {
+    typeaheadContainer.innerHTML = response.map(b => b.name).join('<br>');
+  });

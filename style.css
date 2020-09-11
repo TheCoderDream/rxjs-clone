@@ -1,12 +1,40 @@
 body {
   height: 2000px;
+  margin: 0;
+}
+
+.buttons {
+  display: flex;
+  margin: 20px auto;
+}
+
+.header {
+  background-color: rgb(245, 247, 249);
+  padding: 20px;
+  width: 100%;
+  color: rgb(59, 69, 78);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+}
+
+.header img {
+  margin-right: 10px;
 }
 
 .example {
   margin: auto;
   width: 90%;
-  background-color: rgb(66, 163, 219);
-  white-space: pre;
+  background-color :#E6ECF1;
+  margin-top: 10px;
+  padding: 15px;
+}
+
+.example-title {
+  text-align: center;
+  font-weight: bold;
+  margin: 20px 0;
 }
 
 input {

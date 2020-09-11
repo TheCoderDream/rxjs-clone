@@ -221,6 +221,7 @@ export function fetchAsObservable(input: RequestInfo, init?: RequestInit){
     const signal = controller.signal;
 
     fetch(input, {...init, signal})
+      .then(res => res.json())
       .then(res => subscriber.next(res))
       .catch(err => subscriber.error(err))
       .finally(() => subscriber.complete());
@@ -250,4 +251,42 @@ export function from(value: any) {
   } else if (typeof value === 'string') {
     return fromArray(value.split(''));
   }
+}
+
+export function merge(...observables: Array<Observable>) {
+  return new Observable(subscriber => {
+    const subscribtion = [];
+    let completedCount = 0;
+    observables.forEach(observable => {
+      subscribtion.push(
+        observable.subscribe({
+          next: (val) => {
+            subscriber.next(val);
+          },
+          error: (err) => {
+            subscriber.error(err);
+            completedCount++;
+          },
+          complete: () => {
+            completedCount++;
+            if (completedCount === subscribtion.length) {
+              subscriber.complete();
+            }
+          }
+        })
+      )
+    })
+
+    return () => {
+      subscribtion.forEach(s => {
+        s.unsubscribe();
+      })
+    }
+  });
+}
+
+export function empty() {
+  return new Observable((subscriber) => {
+    subscriber.complete();
+  });
 }
