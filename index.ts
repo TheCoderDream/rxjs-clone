@@ -1,6 +1,6 @@
-import {Observable, of, fromEvent, from, interval, fetchAsObservable, merge, empty } from './creators';
+import {Observable, of, fromEvent, from, interval, fetchAsObservable, merge, empty, timer } from './creators';
 import './style.css';
-import {map, filter, mapTo, reduce, scan, take, takeUntil, takeWhile, find, startWith, endWith, debounceTime, distinctUntilChanged, throttleTime, sampleTime, auditTime, switchMap, pluck } from './operators';
+import {map, filter, mapTo, reduce, scan, take, takeUntil, takeWhile, find, startWith, endWith, debounceTime, distinctUntilChanged, throttleTime, sampleTime, auditTime, switchMap, pluck, exhaustMap, tap, switchMapTo, finalize } from './operators';
 console.clear();
 
 //       EXAMPLES
@@ -160,3 +160,35 @@ input$
   .subscribe((response: any[]) => {
     typeaheadContainer.innerHTML = response.map(b => b.name).join('<br>');
   });
+
+const clicks = fromEvent(document, 'click');
+const result = clicks.pipe(
+  exhaustMap(ev => interval(1000).pipe(take(5)))
+);
+result.subscribe(x => console.log(x));
+
+
+// elems
+const startButton = document.getElementById('start');
+const stopButton = document.getElementById('stop');
+const pollingStatus = document.getElementById('polling-status');
+const dogImage: any = document.getElementById('dog');
+
+// streams
+const startClick$ = fromEvent(startButton, 'click');
+const stopClick$ = fromEvent(stopButton, 'click');
+
+startClick$
+  .pipe(
+    exhaustMap(() =>
+      timer(0, 5000).pipe(
+        tap(() => (pollingStatus.innerHTML = 'Active')),
+        switchMap(
+          () => fetchAsObservable('https://random.dog/woof.json').pipe(pluck('url'))
+        ),
+        takeUntil(stopClick$),
+        finalize(() => (pollingStatus.innerHTML = 'Stopped'))
+      )
+    )
+  )
+  .subscribe(url => (dogImage.src = url));
