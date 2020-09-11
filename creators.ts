@@ -186,6 +186,24 @@ export function interval(intervalInMilisecond) {
   });
 }
 
+export function timer(start, intervalInMilisecond) {
+  return new Observable((subscriber) => {
+    let count = 0;
+    let intervalId;
+    let timeoutId;
+    timeoutId = setTimeout(() => {
+      intervalId = setInterval(() => {
+      subscriber.next(count);
+      count++;
+    },intervalInMilisecond)
+    } ,start)
+    return () => {
+      clearInterval(intervalId);
+      clearTimeout(timeoutId);
+    }
+  });
+}
+
 
 const GeneratorFunction = function*(){}.constructor;
 const AsyncFunction = async function(){}.constructor;

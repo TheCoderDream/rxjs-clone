@@ -556,3 +556,26 @@ export function auditTime(rate: number) {
     }
   })
 }
+
+export function finalize(callback: () => void) {
+  return (observable) => new Observable(subscriber => {
+    const sub = observable.subscribe(
+      {
+        next: (val) => {
+          subscriber.next(val);
+        },
+        error: (err) => {
+          callback();
+          subscriber.error(err);
+        },
+        complete: () => {
+          subscriber.complete();
+        }
+      }
+    );
+
+    return () => {
+      sub.unsubscribe();
+    }
+  })
+}
