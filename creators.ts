@@ -172,6 +172,20 @@ export function fromEvent(element, eventTpye: string) {
   });
 }
 
+export function interval(intervalInMilisecond) {
+  return new Observable((subscriber) => {
+    let count = 0;
+    const intervalId = setInterval(() => {
+      subscriber.next(count);
+      count++;
+    },intervalInMilisecond)
+
+    return () => {
+      clearInterval(intervalId);
+    }
+  });
+}
+
 
 const GeneratorFunction = function*(){}.constructor;
 const AsyncFunction = async function(){}.constructor;

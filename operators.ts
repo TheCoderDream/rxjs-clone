@@ -92,20 +92,6 @@ export function scan(calback: Function, initial?: any) {
   })
 }
 
-export function interval(intervalInMilisecond) {
-  return new Observable((subscriber) => {
-    let count = 0;
-    const intervalId = setInterval(() => {
-      subscriber.next(count);
-      count++;
-    },intervalInMilisecond)
-
-    return () => {
-      clearInterval(intervalId);
-    }
-  });
-}
-
 export function take(count: number) {
   return (observable) => new Observable(subscriber => {
     let index = 1;
@@ -384,7 +370,44 @@ export function debounceTime(timeInMilisecond) {
   })
 }
 
-function switchMap(project: (val) => Observable) {
+export function switchMap(project: (val) => Observable) {
+  return (observable) => new Observable(subscriber => {
+    let innerSub;
+    const sub = observable.subscribe(
+      {
+        next: (val) => {
+          if (innerSub) {
+            innerSub.unsubscribe();
+            innerSub._lift();
+          }
+
+          innerSub = project(val).subscribe(
+            {
+              next: (value) => {
+                subscriber.next(value); 
+              }
+            }
+          )
+        },
+        error: (err) => {
+          subscriber.error(err)
+        },
+        complete: () => {
+          subscriber.complete();
+        }
+      }
+    );
+
+    return () => {
+        if (innerSub) {
+            innerSub.unsubscribe();
+            innerSub._lift();
+       }
+    }
+  });
+}
+
+function mergeMap(project: (val) => Observable) {
   return (observable) => new Observable(subscriber => {
     let innerSub;
     const sub = observable.subscribe(

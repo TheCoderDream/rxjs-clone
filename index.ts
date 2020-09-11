@@ -1,6 +1,6 @@
-import {Observable, of, fromEvent, from  } from './creators';
+import {Observable, of, fromEvent, from, interval, fetchAsObservable } from './creators';
 import './style.css';
-import {map, filter, mapTo, reduce, scan, take, takeUntil, takeWhile, find, startWith, endWith, debounceTime, distinctUntilChanged, throttleTime, sampleTime, auditTime } from './operators';
+import {map, filter, mapTo, reduce, scan, take, takeUntil, takeWhile, find, startWith, endWith, debounceTime, distinctUntilChanged, throttleTime, sampleTime, auditTime, switchMap } from './operators';
 console.clear();
 
 //       EXAMPLES
@@ -104,3 +104,10 @@ fromEvent(document, 'scroll')
     auditTime(50),
     map(({target}) => calculateScrollPercent(target.documentElement))
   ).subscribe(val => {progressBar.style.width = val + '%' })
+
+fromEvent(document, 'click')
+  .pipe(
+    // restart counter on every click
+    switchMap(() => interval(1000).pipe(take(10)))
+  )
+  .subscribe(console.log);
