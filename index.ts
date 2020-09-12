@@ -77,14 +77,15 @@ const example = source.pipe(scan((acc, curr) => acc + curr, 0));
 
 // interval(1000).pipe(take(5), startWith(-1),endWith(6), toArray()).subscribe(console.log);
 
+const debounceResult = document.querySelector('#debounce > span')
 
 fromEvent(document.getElementById('example'), 'keyup')
 .pipe(
-  throttleTime(1000),
+  debounceTime(1000),
 
   map(e => e.target.value),
   distinctUntilChanged()
-).subscribe(console.log);
+).subscribe((val) => debounceResult.innerHTML = val);
 
 take(3)(of(1,2,3,4,5,6,7,8)).subscribe(console.log)
 // get completed 
