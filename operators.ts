@@ -3,7 +3,7 @@ import { Observable } from "./creators";
 export function map(calback: Function) {
   return observable =>
     new Observable(subscriber => {
-      observable.subscribe({
+     const sub = observable.subscribe({
         next: val => {
           subscriber.next(calback(val));
         },
@@ -14,6 +14,10 @@ export function map(calback: Function) {
           subscriber.complete();
         }
       });
+
+      return () => {
+        sub.unsubscribe();
+      }
     });
 }
 
