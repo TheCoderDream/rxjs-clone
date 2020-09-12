@@ -1,6 +1,7 @@
 import {Observable, of, fromEvent, from, interval, fetchAsObservable, merge, empty, timer, combineLatest } from './creators';
 import './style.css';
 import {map, filter, mapTo, reduce, scan, take, takeUntil, takeWhile, find, startWith, endWith, debounceTime, distinctUntilChanged, throttleTime, sampleTime, auditTime, switchMap, pluck, exhaustMap, tap, switchMapTo, finalize } from './operators';
+import { calculateMortgage } from './helpers';
 console.clear();
 
 //       EXAMPLES
@@ -196,19 +197,18 @@ startClick$
 
 const first = document.getElementById('first');
 const second = document.getElementById('second');
-const latestValue = document.querySelector('.latest-value')
+const latestValue = document.querySelector('.latest-value > span')
 
 
-// helpers
-const keyupAsValue = elem => {
-  return fromEvent(elem, 'keyup').pipe(
+const inputAsValue = elem => {
+  return fromEvent(elem, 'input').pipe(
     map((event: any) => event.target.valueAsNumber)
   );
 };
 
 combineLatest(
-  keyupAsValue(first), 
-  keyupAsValue(second)
+  inputAsValue(first), 
+  inputAsValue(second)
 )
 .pipe(
   filter(([first, second]) => {
@@ -217,3 +217,33 @@ combineLatest(
   map(([first, second]) => first + second)
 )
 .subscribe(val => latestValue.innerHTML = val);
+
+// elems
+const loanAmount = document.getElementById('loanAmount');
+const interest = document.getElementById('interest');
+const loanLength = document.querySelectorAll('.loanLength');
+const expected = document.getElementById('expected');
+
+// helpers
+const createInputValueStream = elem => {
+  return fromEvent(elem, 'input').pipe(
+    map((event: any) => parseFloat(event.target.value))
+  );
+};
+
+// streams
+const interest$ = createInputValueStream(interest);
+const loanLength$ = createInputValueStream(loanLength);
+const loanAmount$ = createInputValueStream(loanAmount);
+
+const calculation$ = combineLatest(interest$, loanAmount$, loanLength$).pipe(
+  map(([interest, loanAmount, loanLength]) => {
+    return calculateMortgage(interest, loanAmount, loanLength);
+  }),
+  tap(console.log),
+  filter(mortageAmount => !isNaN(mortageAmount)),
+);
+
+calculation$.subscribe(mortageAmount => {
+  expected.innerHTML = mortageAmount;
+});

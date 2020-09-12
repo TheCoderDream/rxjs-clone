@@ -346,3 +346,41 @@ export function combineLatest(...observables: Array<Observable>) {
     };
   });
 }
+
+export function forkJoin(...observables: Array<Observable>) {
+  return new Observable(subscriber => {
+    const subscribtion = [];
+    const values = new Array(observables.length);
+    let completedCount = 0;
+    observables.forEach((observable, index) => {
+      subscribtion.push(
+        observable.subscribe({
+          next: val => {
+            values[index] = val;
+            if (values.filter(v => v !== undefined)) {
+              subscriber.next(values);
+            }
+          },
+          error: err => {
+            subscribtion.forEach(s => {
+              s.unsubscribe();
+            });
+            subscriber.error(err);
+          },
+          complete: () => {
+            subscribtion.forEach(s => {
+              s.unsubscribe();
+            });
+            subscriber.complete();
+          }
+        })
+      );
+    });
+
+    return () => {
+      subscribtion.forEach(s => {
+        s.unsubscribe();
+      });
+    };
+  });
+}
