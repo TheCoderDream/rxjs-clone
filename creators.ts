@@ -153,16 +153,28 @@ export function of(...args: Array<any>): Observable {
   });
 }
 
-export function fromEvent(element, eventTpye: string) {
+export function fromEvent(elements: any, eventTpye: string) {
   return new Observable(subscriber => {
     function eventHandler(event: Event): void {
       subscriber.next(event);
     }
 
-    element.addEventListener(eventTpye, eventHandler);
+    if (elements instanceof NodeList) {
+      elements.forEach(e => {
+        e.addEventListener(eventTpye, eventHandler);
+      })
+    } else {
+      elements.addEventListener(eventTpye, eventHandler);
+    }
 
     return () => {
-      element.removeEventListener(eventTpye, eventHandler);
+    if (elements instanceof NodeList) {
+      elements.forEach(e => {
+        e.addEventListener(eventTpye, eventHandler);
+      })
+    } else {
+      elements.removeEventListener(eventTpye, eventHandler);
+    }
     };
   });
 }
