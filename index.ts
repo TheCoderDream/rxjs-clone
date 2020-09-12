@@ -161,11 +161,11 @@ input$
     typeaheadContainer.innerHTML = response.map(b => b.name).join('<br>');
   });
 
-const clicks = fromEvent(document, 'click');
-const result = clicks.pipe(
-  exhaustMap(ev => interval(1000).pipe(take(5)))
-);
-result.subscribe(x => console.log(x));
+// const clicks = fromEvent(document, 'click');
+// const result = clicks.pipe(
+//   exhaustMap(ev => interval(1000).pipe(take(5)))
+// );
+// result.subscribe(x => console.log(x));
 
 
 // elems
@@ -180,9 +180,10 @@ const stopClick$ = fromEvent(stopButton, 'click');
 
 startClick$
   .pipe(
+    tap(val => console.log('tap 1')),
     exhaustMap(() =>
       timer(0, 5000).pipe(
-        tap(() => (pollingStatus.innerHTML = 'Active')),
+        tap(() => {(pollingStatus.innerHTML = 'Active'); console.log('tap 2')}),
         switchMap(
           () => fetchAsObservable('https://random.dog/woof.json').pipe(pluck('url'))
         ),

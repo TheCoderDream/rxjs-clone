@@ -191,8 +191,8 @@ export function mapTo(value: any) {
 
 export function pluck(...args: string[]) {
   return observable =>
-    new Observable(subscriber => {
-      observable.subscribe({
+     new Observable(subscriber => {
+      const sub = observable.subscribe({
         next: val => {
           let selectedValue = val;
           for (let key of args) {
@@ -209,6 +209,10 @@ export function pluck(...args: string[]) {
           subscriber.complete();
         }
       });
+
+      return () => {
+        sub.unsubscribe();
+      }
     });
 }
 
@@ -378,6 +382,9 @@ export function switchMap(project: (val) => Observable) {
           innerSub.unsubscribe();
           innerSub._lift();
         }
+
+       sub.unsubscribe();
+       sub._lift();
       };
     });
 }
@@ -537,6 +544,7 @@ export function finalize(callback: () => void) {
           subscriber.error(err);
         },
         complete: () => {
+          callback();
           subscriber.complete();
         }
       });
@@ -599,6 +607,7 @@ export function tap(callback: (val: any)=> void) {
   return (observable) => new Observable(subscriber => {
     const sub = observable.subscribe({
       next: (val) => {
+        callback(val);
         subscriber.next(val);
       },
       error: (error) => {
@@ -611,6 +620,7 @@ export function tap(callback: (val: any)=> void) {
 
     return () => {
       sub.unsubscribe();
+      sub._lift();
     }
   })
 }
