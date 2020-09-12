@@ -74,3 +74,16 @@ input {
 #stop {
   background: red;
 }
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper input {
+  margin-top: 0;
+}
+
+.latest-value {
+  padding: 15px;
+}

@@ -1,4 +1,4 @@
-import {Observable, of, fromEvent, from, interval, fetchAsObservable, merge, empty, timer } from './creators';
+import {Observable, of, fromEvent, from, interval, fetchAsObservable, merge, empty, timer, combineLatest } from './creators';
 import './style.css';
 import {map, filter, mapTo, reduce, scan, take, takeUntil, takeWhile, find, startWith, endWith, debounceTime, distinctUntilChanged, throttleTime, sampleTime, auditTime, switchMap, pluck, exhaustMap, tap, switchMapTo, finalize } from './operators';
 console.clear();
@@ -193,3 +193,27 @@ startClick$
     )
   )
   .subscribe(url => (dogImage.src = url));
+
+const first = document.getElementById('first');
+const second = document.getElementById('second');
+const latestValue = document.querySelector('.latest-value')
+
+
+// helpers
+const keyupAsValue = elem => {
+  return fromEvent(elem, 'keyup').pipe(
+    map((event: any) => event.target.valueAsNumber)
+  );
+};
+
+combineLatest(
+  keyupAsValue(first), 
+  keyupAsValue(second)
+)
+.pipe(
+  filter(([first, second]) => {
+    return !isNaN(first) && !isNaN(second);
+  }),
+  map(([first, second]) => first + second)
+)
+.subscribe(val => latestValue.innerHTML = val);
